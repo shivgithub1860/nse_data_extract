@@ -25,9 +25,29 @@ jobs:
         run: |
           pip install nbconvert pandas requests jupyter
 
+      - name: 🔍 Debug - Check Existing Files
+        run: |
+          echo "Current Directory: $(pwd)"
+          echo "Listing Files:"
+          ls -la
+
       - name: 🔄 Convert Jupyter Notebook to Python Script
         run: |
-          jupyter nbconvert --to script nse_git_data.ipynb --output nse_git_data.py
+          if [ -f "nse_git_data.ipynb" ]; then
+            jupyter nbconvert --to script nse_git_data.ipynb --output nse_git_data.py
+            echo "✅ Conversion successful: nse_git_data.py created."
+          else
+            echo "❌ ERROR: nse_git_data.ipynb not found!"
+            exit 1
+          fi
+
+      - name: 🔍 Debug - Check Conversion
+        run: |
+          ls -la
+          if [ ! -f "nse_git_data.py" ]; then
+            echo "❌ ERROR: Conversion failed, nse_git_data.py not found!"
+            exit 1
+          fi
 
       - name: 🚀 Run the Python Script
         run: |
@@ -37,4 +57,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: stock_data_output
-          path: stock_data.csv  # Change this if your script saves data with a different filename
+          path: |
+            stock_data.csv
