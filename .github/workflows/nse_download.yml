@@ -1,34 +1,40 @@
-name: Fetch NSE Stock Data
+name: Fetch Stock Data
 
 on:
-  workflow_dispatch:  # Manual trigger
+  workflow_dispatch:
     inputs:
       stock_symbol:
-        description: "Enter stock symbol (e.g., TCS, INFY, RELIANCE)"
+        description: 'Stock Symbol (e.g., TCS, INFY, RELIANCE)'
         required: true
+        default: 'TCS'
 
 jobs:
-  fetch-data:
+  fetch-stock-data:
     runs-on: ubuntu-latest
-    
+
     steps:
-      - name: 🛠 Checkout Repository
+      - name: 📥 Checkout Repository
         uses: actions/checkout@v4
 
       - name: 🐍 Set Up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.9"
+          python-version: '3.10'
 
       - name: 📦 Install Dependencies
         run: |
-          pip install requests pandas
+          pip install nbformat nbconvert pandas requests jupyter
 
-      - name: 📊 Fetch Stock Data
-        run: python nse_git_data.py "${{ github.event.inputs.stock_symbol }}"
+      - name: 🔄 Convert Python Script to Jupyter Notebook
+        run: |
+          jupytext --to notebook nse_git_data.py --output nse_git_data.ipynb
 
-      - name: 📤 Upload CSV Output
-        uses: actions/upload-artifact@v4  # ✅ Updated to v4
+      - name: 🚀 Run Jupyter Notebook
+        run: |
+          jupyter nbconvert --to notebook --execute nse_git_data.ipynb
+
+      - name: 💾 Upload Notebook as Artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: stock-data
-          path: "*.csv"
+          name: stock_data_notebook
+          path: nse_git_data.ipynb
