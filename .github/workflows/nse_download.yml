@@ -23,18 +23,18 @@ jobs:
 
       - name: 📦 Install Dependencies
         run: |
-          pip install nbformat nbconvert pandas requests jupyter
+          pip install nbconvert pandas requests jupyter
 
-      - name: 🔄 Convert Python Script to Jupyter Notebook
+      - name: 🔄 Convert Jupyter Notebook to Python Script
         run: |
-          jupytext --to notebook nse_git_data.py --output nse_git_data.ipynb
+          jupyter nbconvert --to script nse_git_data.ipynb --output nse_git_data.py
 
-      - name: 🚀 Run Jupyter Notebook
+      - name: 🚀 Run the Python Script
         run: |
-          jupyter nbconvert --to notebook --execute nse_git_data.ipynb
+          python nse_git_data.py "${{ github.event.inputs.stock_symbol }}"
 
-      - name: 💾 Upload Notebook as Artifact
+      - name: 💾 Upload Generated Data
         uses: actions/upload-artifact@v4
         with:
-          name: stock_data_notebook
-          path: nse_git_data.ipynb
+          name: stock_data_output
+          path: stock_data.csv  # Change this if your script saves data with a different filename
