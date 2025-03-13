@@ -1,0 +1,31 @@
+name: Fetch Stock Data
+
+on:
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  fetch-data:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Set Up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.9'
+
+    - name: Install Dependencies
+      run: pip install requests pandas
+
+    - name: Run Stock Data Fetch Script
+      env:
+        STOCK_SYMBOL: "TCS"  # Change this to any stock
+      run: python nse_git_data.py
+
+    - name: Upload CSV Output
+      uses: actions/upload-artifact@v3
+      with:
+        name: stock-data
+        path: "*.csv"
