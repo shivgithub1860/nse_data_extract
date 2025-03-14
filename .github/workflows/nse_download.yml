@@ -27,24 +27,30 @@ jobs:
 
       - name: 🔄 Convert Jupyter Notebook to Python Script
         run: |
-          if [ -f "nse_git_data.ipynb" ]; then
-            jupyter nbconvert --to script nse_git_data.ipynb
-            mv nse_git_data.py nse_git_data_script.py  # Rename to avoid conflicts
-            echo "✅ Conversion successful: nse_git_data_script.py created."
-          else
-            echo "❌ ERROR: nse_git_data.ipynb not found!"
-            exit 1
-          fi
+          jupyter nbconvert --to script nse_git_data.ipynb --output nse_git_data.py
 
-      - name: 🔍 Debug - Check Conversion
-        run: ls -la  # Check if the script is correctly created
+      - name: 🔍 Debug - Check File System Before Running
+        run: |
+          echo "📂 Listing all files before running script:"
+          ls -la
 
       - name: 🚀 Run the Python Script
         run: |
-          python nse_git_data_script.py "${{ github.event.inputs.stock_symbol }}"
+          python nse_git_data.py "${{ github.event.inputs.stock_symbol }}"
+
+      - name: 🔍 Debug - Check for Output File
+        run: |
+          echo "📂 Listing all files after script execution:"
+          ls -la
+          if [ -f "stock_data.csv" ]; then
+            echo "✅ stock_data.csv found!"
+          else
+            echo "❌ stock_data.csv NOT found!"
+            exit 1  # Fails the workflow if file is missing
+          fi
 
       - name: 💾 Upload Generated Data
         uses: actions/upload-artifact@v4
         with:
           name: stock_data_output
-          path: stock_data.csv  # Change this if your script saves data with a different filename
+          path: ./stock_data.csv
