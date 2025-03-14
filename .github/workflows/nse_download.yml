@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: true  # Ensures Git can push changes
 
       - name: 🐍 Set Up Python
         uses: actions/setup-python@v4
@@ -27,30 +29,25 @@ jobs:
 
       - name: 🔄 Convert Jupyter Notebook to Python Script
         run: |
-          jupyter nbconvert --to script nse_git_data.ipynb --output nse_git_data.py
+          jupyter nbconvert --to script nse_git_data.ipynb --output nse_git_data
+        # Fixes incorrect naming issue
 
-      - name: 🔍 Debug - Check File System Before Running
+      - name: 🔍 Debug - List Files After Conversion
         run: |
-          echo "📂 Listing all files before running script:"
+          echo "📂 Checking files after conversion..."
           ls -la
 
       - name: 🚀 Run the Python Script
         run: |
           python nse_git_data.py "${{ github.event.inputs.stock_symbol }}"
+        # Ensures correct filename is used
 
-      - name: 🔍 Debug - Check for Output File
+      - name: 💾 Commit & Push Output to Repository
         run: |
-          echo "📂 Listing all files after script execution:"
-          ls -la
-          if [ -f "stock_data.csv" ]; then
-            echo "✅ stock_data.csv found!"
-          else
-            echo "❌ stock_data.csv NOT found!"
-            exit 1  # Fails the workflow if file is missing
-          fi
-
-      - name: 💾 Upload Generated Data
-        uses: actions/upload-artifact@v4
-        with:
-          name: stock_data_output
-          path: ./stock_data.csv
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add stock_data.csv
+          git commit -m "📊 Add stock data for ${{ github.event.inputs.stock_symbol }}"
+          git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
