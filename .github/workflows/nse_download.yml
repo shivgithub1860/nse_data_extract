@@ -30,7 +30,6 @@ jobs:
       - name: 🔄 Convert Jupyter Notebook to Python Script
         run: |
           jupyter nbconvert --to script nse_git_data.ipynb --output nse_git_data
-        # Fixes incorrect naming issue
 
       - name: 🔍 Debug - List Files After Conversion
         run: |
@@ -40,14 +39,27 @@ jobs:
       - name: 🚀 Run the Python Script
         run: |
           python nse_git_data.py "${{ github.event.inputs.stock_symbol }}"
-        # Ensures correct filename is used
+
+      - name: 🛠 Handle Missing CSV File
+        run: |
+          if [ ! -f stock_data.csv ]; then
+            echo "⚠️ stock_data.csv missing! Creating fallback_stock_data.csv..."
+            touch fallback_stock_data.csv
+          fi
 
       - name: 💾 Commit & Push Output to Repository
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-          git add stock_data.csv
-          git commit -m "📊 Add stock data for ${{ github.event.inputs.stock_symbol }}"
+          
+          if [ -f stock_data.csv ]; then
+            git add stock_data.csv
+            git commit -m "📊 Add stock data for ${{ github.event.inputs.stock_symbol }}"
+          else
+            git add fallback_stock_data.csv
+            git commit -m "⚠️ stock_data.csv missing, added fallback_stock_data.csv instead"
+          fi
+          
           git push origin main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
