@@ -1,66 +1,40 @@
-name: Fetch Stock Data
+name: 📊 Fetch NSE Data
 
 on:
-  workflow_dispatch:
-    inputs:
-      stock_symbol:
-        description: 'Stock Symbol (e.g., TCS, INFY, RELIANCE)'
-        required: true
-        default: 'TCS'
+  workflow_dispatch:  # Allows manual triggering
+  schedule:
+    - cron: "0 0 * * 1-5"  # Runs every weekday at midnight UTC
 
 jobs:
-  fetch-stock-data:
+  fetch-nse-data:
     runs-on: ubuntu-latest
 
     steps:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
-        with:
-          persist-credentials: false  # Use token-based authentication for security
 
       - name: 🐍 Set Up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.9"
 
       - name: 📦 Install Dependencies
-        run: |
-          pip install nbconvert pandas requests jupyter
+        run: pip install requests pandas nbconvert
 
       - name: 🔄 Convert Jupyter Notebook to Python Script
-        run: |
-          jupyter nbconvert --to script nse_git_data.ipynb --output nse_git_data
+        run: jupyter nbconvert --to script nse_git_data.ipynb
 
-      - name: 🔍 Debug - List Files After Conversion
-        run: |
-          echo "📂 Checking files after conversion..."
-          ls -la
-
-      - name: 🚀 Run the Python Script
-        run: |
-          python nse_git_data.py "${{ github.event.inputs.stock_symbol }}"
-
-      - name: 🛠 Handle Missing CSV File
-        run: |
-          if [ ! -f stock_data.csv ]; then
-            echo "⚠️ stock_data.csv missing! Creating fallback_stock_data.csv..."
-            touch fallback_stock_data.csv
-          fi
-
-      - name: 💾 Commit & Push Output to Repository
+      - name: 🔄 Fetch NSE Stock Data
         env:
-          GH_PAT: ${{ secrets.GH_PAT }}  # Using GitHub Secret for security
+          STOCK_SYMBOL: "TCS"  # Change stock symbol if needed
+        run: python nse_git_data.py
+
+      - name: 💾 Commit & Push Data
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-          git remote set-url origin https://shivgithub1860:${GH_PAT}@github.com/shivgithub1860/nse_data_extract.git
-          
-          if [ -f stock_data.csv ]; then
-            git add stock_data.csv
-            git commit -m "📊 Add stock data for ${{ github.event.inputs.stock_symbol }}"
-          else
-            git add fallback_stock_data.csv
-            git commit -m "⚠️ stock_data.csv missing, added fallback_stock_data.csv instead"
-          fi
-
-          git push origin main
+          git add nse_git_data.py
+          git commit -m "🔄 Converted Notebook to Script & Updated Stock Data" || echo "No changes to commit"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
