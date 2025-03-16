@@ -16,7 +16,7 @@ jobs:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
         with:
-          persist-credentials: true  # Ensures Git can push changes
+          persist-credentials: false  # Use token-based authentication for security
 
       - name: 🐍 Set Up Python
         uses: actions/setup-python@v4
@@ -47,9 +47,9 @@ jobs:
             touch fallback_stock_data.csv
           fi
 
-            - name: 💾 Commit & Push Output to Repository
+      - name: 💾 Commit & Push Output to Repository
         env:
-          GH_PAT: ${{ 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}}  # Use the Personal Access Token
+          GH_PAT: ${{ secrets.GH_PAT }}  # Using GitHub Secret for security
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
@@ -64,6 +64,3 @@ jobs:
           fi
 
           git push origin main
-
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
