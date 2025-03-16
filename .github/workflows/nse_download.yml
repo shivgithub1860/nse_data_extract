@@ -47,10 +47,13 @@ jobs:
             touch fallback_stock_data.csv
           fi
 
-      - name: 💾 Commit & Push Output to Repository
+            - name: 💾 Commit & Push Output to Repository
+        env:
+          GH_PAT: ${{ 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}}  # Use the Personal Access Token
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
+          git remote set-url origin https://shivgithub1860:${GH_PAT}@github.com/shivgithub1860/nse_data_extract.git
           
           if [ -f stock_data.csv ]; then
             git add stock_data.csv
@@ -59,7 +62,8 @@ jobs:
             git add fallback_stock_data.csv
             git commit -m "⚠️ stock_data.csv missing, added fallback_stock_data.csv instead"
           fi
-          
+
           git push origin main
+
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
