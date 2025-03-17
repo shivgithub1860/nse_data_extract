@@ -1,9 +1,12 @@
 name: 📊 Fetch NSE Data
 
 on:
-  workflow_dispatch:  # Allows manual triggering
+  workflow_dispatch:
   schedule:
-    - cron: "0 0 * * 1-5"  # Runs every weekday at midnight UTC
+    - cron: "0 0 * * 1-5"
+
+permissions:
+  contents: write  # 🔥 This grants push access
 
 jobs:
   fetch-nse-data:
@@ -12,6 +15,8 @@ jobs:
     steps:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}  # Ensure GitHub Actions can push
 
       - name: 🐍 Set Up Python
         uses: actions/setup-python@v4
@@ -26,7 +31,7 @@ jobs:
 
       - name: 🔄 Fetch NSE Stock Data
         env:
-          STOCK_SYMBOL: "TCS"  # Change stock symbol if needed
+          STOCK_SYMBOL: "TCS"
         run: python nse_git_data.py
 
       - name: 💾 Commit & Push Data
@@ -36,5 +41,3 @@ jobs:
           git add nse_git_data.py
           git commit -m "🔄 Converted Notebook to Script & Updated Stock Data" || echo "No changes to commit"
           git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
